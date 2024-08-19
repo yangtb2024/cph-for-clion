@@ -1,10 +1,10 @@
-## cph-for-clion v0.1
+# cph-for-clion v0.1
 
 [更新日志]()
 
 ---
 
-### 使用方法
+# 使用方法
 
 在Clion里面配合[competitive companion]()https://github.com/jmerle/competitive-companion?tab=readme-ov-file使用。
 
