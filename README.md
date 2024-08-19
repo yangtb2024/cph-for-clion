@@ -9,3 +9,9 @@
 ![](https://stripe.serv00.net/thumbnails/1a8b9a0ad20bbf88238dce7c75abca28.png)
 
 名字随便填，第一行填python路径，第二行填项目路径+这个python文件的名字，第三行填项目路径。
+
+![](https://stripe.serv00.net/thumbnails/69081efbdc9ad7ab830bd9bb0ec8692a.png)
+
+分别点击这两个，随后出现两个程序。
+
+未完待续。
