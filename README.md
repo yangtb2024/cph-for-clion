@@ -1,12 +1,8 @@
-# cph-for-clion v0.1
+# Competitive Programming Setup and Testing Tool
+
+## 更新日志
 
 [更新日志](https://blog.yangtb2024.me/archives/27)
-
----
-
-# 使用方法
-
-# Competitive Programming Setup and Testing Tool
 
 ## 项目简介
 
