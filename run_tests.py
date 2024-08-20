@@ -4,24 +4,30 @@ import sys
 import logging
 import time
 import ctypes
+import hashlib
 from ctypes import wintypes
 
 LATEST_PROBLEM_FILE = "latest_problem.txt"  # 保存最近题目名称的文件
 LOG_FILE = "run_tests.log"  # 日志文件名
+LAST_HASH_FILE = "last_hash.txt"  # 保存上次编译的哈希值的文件
 
-# 配置日志记录，仅记录到文件
+# 配置标准输出为 UTF-8 编码
+sys.stdout.reconfigure(encoding='utf-8')
+
+# 配置日志记录，仅记录到文件，并确保使用 UTF-8 编码
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+                    format='%(asctime)s - %(levelname)s - %(message)s', encoding='utf-8')
 
 # ANSI 转义序列定义颜色
 GREEN = "\033[92m"
 RED = "\033[91m"
 YELLOW = "\033[93m"
 CYAN = "\033[96m"
+BLUE = "\033[94m"
 RESET = "\033[0m"
 
-# 分割线
-SEPARATOR = CYAN + "-" * 50 + RESET
+# 单条分割线
+SEPARATOR = BLUE + "-" * 60 + RESET
 
 # Windows API constants
 JOB_OBJECT_LIMIT_PROCESS_MEMORY = 0x100
@@ -85,6 +91,14 @@ def create_job_with_memory_limit(memory_limit_mb):
 def assign_process_to_job(process, job):
     ctypes.windll.kernel32.AssignProcessToJobObject(job, process._handle)
 
+# 计算文件的哈希值
+def calculate_file_hash(file_path):
+    hasher = hashlib.sha256()
+    with open(file_path, 'rb') as f:
+        buf = f.read()
+        hasher.update(buf)
+    return hasher.hexdigest()
+
 # 读取时间和空间限制
 def read_limits(project_dir):
     limits_file = os.path.join(project_dir, 'limits.txt')
@@ -92,12 +106,12 @@ def read_limits(project_dir):
     memory_limit = 64  # 默认64MB
 
     if os.path.exists(limits_file):
-        with open(limits_file, 'r') as f:
+        with open(limits_file, 'r', encoding='utf-8') as f:
             for line in f:
                 if line.startswith('TimeLimit:'):
-                    time_limit = int(line.split(':')[1].strip())
+                    time_limit = int(line.split(':')[1].strip().replace(' ms', ''))
                 elif line.startswith('MemoryLimit:'):
-                    memory_limit = int(line.split(':')[1].strip())
+                    memory_limit = int(line.split(':')[1].strip().replace(' MB', ''))
 
     logging.info(f"Using time limit: {time_limit} ms and memory limit: {memory_limit} MB")
     return time_limit / 1000, memory_limit
@@ -105,6 +119,9 @@ def read_limits(project_dir):
 # 编译 C++ 代码
 def compile_cpp(project_dir):
     compile_command = f"g++ -std=c++17 -O2 -Wall {os.path.join(project_dir, 'main.cpp')} -o {os.path.join(project_dir, 'solution')}"
+    print(SEPARATOR)
+    print(CYAN + "Compiling..." + RESET)
+    sys.stdout.flush()
     try:
         subprocess.run(compile_command, shell=True, check=True)
         logging.info("Compilation successful.")
@@ -112,14 +129,32 @@ def compile_cpp(project_dir):
     except subprocess.CalledProcessError:
         logging.error("Compilation failed.")
         print(RED + "Compilation failed." + RESET)
+        sys.stdout.flush()
         sys.exit(1)
+
+# 检查代码是否发生变化
+def code_changed(project_dir):
+    main_cpp_path = os.path.join(project_dir, 'main.cpp')
+    current_hash = calculate_file_hash(main_cpp_path)
+
+    if os.path.exists(LAST_HASH_FILE):
+        with open(LAST_HASH_FILE, 'r', encoding='utf-8') as f:
+            last_hash = f.read().strip()
+        if current_hash == last_hash:
+            print(GREEN + "No changes in the code since the last run. Skipping compilation." + RESET)
+            logging.info("No changes in the code since the last run. Skipping compilation.")
+            return False
+
+    with open(LAST_HASH_FILE, 'w', encoding='utf-8') as f:
+        f.write(current_hash)
+    return True
 
 # 运行单个测试用例
 def run_test(input_file, output_file, test_number, project_dir, time_limit, memory_limit):
-    print(SEPARATOR)
-    print(f"Running Test {test_number}:")
+    print(f"{BLUE}Running Test {test_number}:{RESET}")
+    sys.stdout.flush()
 
-    with open(input_file, 'r') as f:
+    with open(input_file, 'r', encoding='utf-8') as f:
         input_data = f.read()
 
     start_time = time.time()
@@ -142,74 +177,70 @@ def run_test(input_file, output_file, test_number, project_dir, time_limit, memo
 
                 # 检查内存是否超过限制
                 if peak_memory > memory_limit:
-                    print(RED + f"Test {test_number}: Memory Limit Exceeded" + RESET)
-                    print(f"Time: {elapsed_time:.3f} seconds")
-                    print(f"Memory: {peak_memory:.3f} MB (Limit: {memory_limit} MB)")
+                    print(f"{RED}Test {test_number}: Memory Limit Exceeded{RESET}")
+                    print(f"{YELLOW}Time: {elapsed_time:.3f} seconds{RESET}")
+                    print(f"{YELLOW}Memory: {peak_memory:.3f} MB (Limit: {memory_limit} MB){RESET}")
                     logging.warning(f"Test {test_number}: Memory Limit Exceeded")
                     logging.info(f"Time: {elapsed_time:.3f} seconds")
                     logging.info(f"Memory: {peak_memory:.3f} MB (Limit: {memory_limit} MB)")
-                    print(RED + "M" + RESET, end="")  # 输出一个红色的M，表示内存超限
                     sys.stdout.flush()
-                    return False
+                    return "Memory Limit Exceeded", False
 
                 program_output = stdout.strip()  # 去除首尾空白字符
 
                 # 读取期望输出
-                with open(output_file, 'r') as f:
+                with open(output_file, 'r', encoding='utf-8') as f:
                     expected_output = f.read().strip()  # 去除首尾空白字符
 
                 # 比较程序输出和期望输出
                 if program_output == expected_output:
-                    print(GREEN + f"Test {test_number}: Passed" + RESET)
-                    print(f"Time: {elapsed_time:.3f} seconds")
-                    print(f"Memory: {peak_memory:.3f} MB")
+                    print(f"{GREEN}Test {test_number}: Passed{RESET}")
+                    print(f"{YELLOW}Time: {elapsed_time:.3f} seconds{RESET}")
+                    print(f"{YELLOW}Memory: {peak_memory:.3f} MB{RESET}")
                     logging.info(f"Test {test_number}: Passed")
                     logging.info(f"Time: {elapsed_time:.3f} seconds")
                     logging.info(f"Memory: {peak_memory:.3f} MB")
-                    print(GREEN + "." + RESET, end="")  # 输出一个绿色的点，表示测试通过
                     sys.stdout.flush()
-                    return True
+                    return "Passed", True
                 else:
-                    print(RED + f"Test {test_number}: Failed" + RESET)
-                    print(f"Time: {elapsed_time:.3f} seconds")
-                    print(f"Memory: {peak_memory:.3f} MB")
-                    print(f"Expected:\n{expected_output}")
-                    print(f"Got:\n{program_output}")
+                    print(f"{RED}Test {test_number}: Failed{RESET}")
+                    print(f"{YELLOW}Time: {elapsed_time:.3f} seconds{RESET}")
+                    print(f"{YELLOW}Memory: {peak_memory:.3f} MB{RESET}")
+                    print(f"{RED}Expected:{RESET}\n{expected_output}")
+                    print(f"{RED}Got:{RESET}\n{program_output}")
                     logging.info(f"Test {test_number}: Failed")
                     logging.info(f"Time: {elapsed_time:.3f} seconds")
                     logging.info(f"Memory: {peak_memory:.3f} MB")
                     logging.info(f"Expected:\n{expected_output}")
                     logging.info(f"Got:\n{program_output}")
-                    print(RED + "x" + RESET, end="")  # 输出一个红色的x，表示测试失败
                     sys.stdout.flush()
-                    return False
+                    return "Failed", False
 
             except subprocess.TimeoutExpired:
                 process.kill()  # 终止子进程
                 end_time = time.time()
                 elapsed_time = end_time - start_time
-                print(YELLOW + f"Test {test_number}: Time Limit Exceeded" + RESET)
-                print(f"Time: {elapsed_time:.3f} seconds")
+                print(f"{YELLOW}Test {test_number}: Time Limit Exceeded{RESET}")
+                print(f"{YELLOW}Time: {elapsed_time:.3f} seconds{RESET}")
                 logging.warning(f"Test {test_number}: Time Limit Exceeded")
                 logging.info(f"Time: {elapsed_time:.3f} seconds")
-                print(YELLOW + "!" + RESET, end="")  # 输出一个黄色的!，表示超时
                 sys.stdout.flush()
-                return False
+                return "Time Limit Exceeded", False
 
     except subprocess.CalledProcessError:
         end_time = time.time()
         elapsed_time = end_time - start_time
-        print(RED + "An error occurred during test execution." + RESET)
-        print(f"Time: {elapsed_time:.3f} seconds")
+        print(f"{RED}An error occurred during test execution.{RESET}")
+        print(f"{YELLOW}Time: {elapsed_time:.3f} seconds{RESET}")
         logging.error("An error occurred during test execution.")
         logging.info(f"Time: {elapsed_time:.3f} seconds")
-        print(RED + "x" + RESET, end="")  # 输出一个红色的x，表示发生错误
         sys.stdout.flush()
-        return False
+        return "Error", False
 
 # 运行所有测试用例
 def run_all_tests(project_dir):
-    compile_cpp(project_dir)
+    if code_changed(project_dir):
+        compile_cpp(project_dir)
 
     time_limit, memory_limit = read_limits(project_dir)  # 读取时间和内存限制
 
@@ -219,26 +250,41 @@ def run_all_tests(project_dir):
     passed = 0
     total = len(test_files)
 
-    for input_file in test_files:
+    print(SEPARATOR)
+    print(f"{CYAN}Running {total} Test(s):{RESET}")
+    sys.stdout.flush()
+
+    for i, input_file in enumerate(test_files):
         test_number = input_file[5:-4]  # 提取测试编号
         output_file = f"output{test_number}.txt"
-        if run_test(os.path.join(project_dir, input_file), os.path.join(project_dir, output_file), test_number, project_dir, time_limit, memory_limit):
+        status, result = run_test(os.path.join(project_dir, input_file), os.path.join(project_dir, output_file), test_number, project_dir, time_limit, memory_limit)
+        if result:
             passed += 1
+        print(f"Status: {status}")
+        sys.stdout.flush()
 
-    logging.info(f"\nPassed {passed} out of {total} tests.")
-    print(SEPARATOR)
-    print(CYAN + f"\nPassed {passed} out of {total} tests." + RESET)
+        # 仅在两个测试之间打印分隔线
+        if i < total - 1:
+            print(SEPARATOR)
+            sys.stdout.flush()
+
+    summary = f"{CYAN}\nSummary: Passed {passed} out of {total} tests.{RESET}"
+    logging.info(summary)
+    print(summary)
+    sys.stdout.flush()
 
 def get_latest_problem_directory():
     if os.path.exists(LATEST_PROBLEM_FILE):
-        with open(LATEST_PROBLEM_FILE, 'r') as f:
+        with open(LATEST_PROBLEM_FILE, 'r', encoding='utf-8') as f:
             problem_name = f.read().strip()
         logging.info(f"Latest problem directory is '{problem_name}'")
-        print(CYAN + f"Latest problem directory is '{problem_name}'" + RESET)
+        print(f"{CYAN}Latest problem directory is '{problem_name}'{RESET}")
+        sys.stdout.flush()
         return problem_name
     else:
         logging.error(f"{LATEST_PROBLEM_FILE} not found.")
-        print(RED + f"Error: {LATEST_PROBLEM_FILE} not found." + RESET)
+        print(f"{RED}Error: {LATEST_PROBLEM_FILE} not found.{RESET}")
+        sys.stdout.flush()
         sys.exit(1)
 
 if __name__ == "__main__":
@@ -249,7 +295,11 @@ if __name__ == "__main__":
 
     if not os.path.exists(project_directory):
         logging.error(f"The directory '{project_directory}' does not exist.")
-        print(RED + f"Error: The directory '{project_directory}' does not exist." + RESET)
+        print(f"{RED}Error: The directory '{project_directory}' does not exist.{RESET}")
+        sys.stdout.flush()
         sys.exit(1)
 
     run_all_tests(project_directory)
+
+    # 确保在所有测试完成后终止 solution.exe 进程，并静默处理输出，避免乱码
+    subprocess.call(['taskkill', '/f', '/im', 'solution.exe'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
