@@ -6,7 +6,7 @@
 
 # 使用方法
 
-在Clion里面配合[competitive companion]()https://github.com/jmerle/competitive-companion?tab=readme-ov-file使用。
+在Clion里面配合[competitive companion](https://github.com/jmerle/competitive-companion?tab=readme-ov-file)使用。
 
 把这两个放在项目文件夹下。
 
