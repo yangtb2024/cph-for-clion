@@ -14,6 +14,7 @@
 - `run_tests.py`：编译项目代码并运行测试用例，根据 `limits.txt` 中的限制条件执行测试，并支持代码变更检测以提高效率。
 - `latest_problem.txt`：保存最近获取的题目名称，用于快速定位项目目录。
 - `limits.txt`：每个项目目录下保存的时间和空间限制文件。
+- `template.cpp`：用户需自行准备的 C++ 代码模板文件，用于在每次创建新项目时作为 `main.cpp` 的基础模板。
 
 ## 安装与配置
 
@@ -26,6 +27,12 @@
 ### 安装依赖
 
 确保你的环境中已经安装了 Python 和 g++ 编译器。
+
+### 准备 `template.cpp`
+
+在使用 `cp-setup.py` 之前，用户需要自行创建并配置 `template.cpp` 文件。此文件将作为每次创建新项目时的代码模板。请将 `template.cpp` 放置在与 `cp-setup.py` 同一目录下。
+
+`template.cpp` 文件可以包含您常用的代码模板，如常见的宏定义、常用的函数等。每次创建新项目时，`template.cpp` 的内容将被复制到新生成的 `main.cpp` 文件中。
 
 ### 在 CLion 中配置 External Tools
 
@@ -61,7 +68,7 @@
 
 打开浏览器中的编程竞赛网站，并使用 Competitive Companion 扩展将题目发送到你的服务器。`cp-setup.py` 会自动创建一个新目录，其中包含以下内容：
 
-- `main.cpp`：带有题目信息的 C++ 代码模板。
+- `main.cpp`：基于 `template.cpp` 的 C++ 代码模板，包含题目信息。
 - `inputX.txt` 和 `outputX.txt`：自动生成的测试用例。
 - `limits.txt`：题目的时间和空间限制。
 
@@ -98,8 +105,8 @@ MemoryLimit: 256 MB
 
 ## 注意事项
 
+- 确保你的 `template.cpp` 文件已准备好，并且 `cp-setup.py` 能够访问到它。
 - 确保你的 C++ 代码能够从标准输入读取数据，并将结果输出到标准输出。
-- 目前的工具不支持自动化的内存限制控制。如果需要严格控制内存使用，可以考虑使用操作系统的工具或其他编程语言实现此功能。
 
 ## 贡献
 
