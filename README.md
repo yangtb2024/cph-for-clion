@@ -6,7 +6,6 @@
 
 # 使用方法
 
-```markdown
 # Competitive Programming Setup and Testing Tool
 
 ## 项目简介
@@ -113,4 +112,3 @@ MemoryLimit: 256
 ## 许可证
 
 该项目使用 MIT 许可证 - 详情请参阅 [LICENSE](LICENSE) 文件。
-```
