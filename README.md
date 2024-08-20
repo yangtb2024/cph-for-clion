@@ -6,8 +6,6 @@
 
 # 使用方法
 
-如果你是在 CLion 中通过 External Tools 来使用这些脚本，那么 `README.md` 需要针对 CLion 的配置进行说明。下面是更新后的 `README.md`，重点介绍如何在 CLion 中配置和使用这些工具。
-
 ```markdown
 # Competitive Programming Setup and Testing Tool
 
