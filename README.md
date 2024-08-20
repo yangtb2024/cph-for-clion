@@ -8,11 +8,11 @@
 
 在Clion里面配合[competitive companion](https://github.com/jmerle/competitive-companion?tab=readme-ov-file)使用。
 
-把这两个放在项目文件夹下。
+把两个python文件放在项目文件夹下。
 
 ![](https://stripe.serv00.net/thumbnails/bdceac577e24dba4140f15e443754c0d.png)
 
-在这里点击加号，添加两个。
+在这里点击加号，添加两个tools。
 
 ![](https://stripe.serv00.net/thumbnails/1a8b9a0ad20bbf88238dce7c75abca28.png)
 
