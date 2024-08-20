@@ -1,12 +1,12 @@
-# Competitive Programming Setup and Testing Tool
+# cph-for-clion
+
+## 项目简介
+
+`cph-for-clion` 是一个用于自动化设置和测试竞赛编程题目的工具集，专为 CLion 用户设计。`cp-setup.py` 用于从 Competitive Companion 浏览器扩展获取题目信息，并自动创建项目目录，生成代码模板，并保存时间和空间限制。`run_tests.py` 用于编译和运行这些项目中的测试用例，同时尊重每个题目的时间限制。
 
 ## 更新日志
 
 [更新日志](https://blog.yangtb2024.me/archives/27)
-
-## 项目简介
-
-这是一个用于自动化设置和测试竞赛编程题目的工具集。`cp-setup.py` 用于从 Competitive Companion 浏览器扩展获取题目信息，并自动创建项目目录，生成代码模板，并保存时间和空间限制。`run_tests.py` 用于编译和运行这些项目中的测试用例，同时尊重每个题目的时间限制。
 
 ## 文件结构
 
