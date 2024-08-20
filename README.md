@@ -1,6 +1,6 @@
 # cph-for-clion v0.1
 
-[更新日志]()
+[更新日志](https://blog.yangtb2024.me/archives/27)
 
 ---
 
