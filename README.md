@@ -1,19 +1,17 @@
-# cph-for-clion
-
 ## 项目简介
 
 `cph-for-clion` 是一个用于自动化设置和测试竞赛编程题目的工具集，专为 CLion 用户设计。`cp-setup.py` 用于从 Competitive Companion 浏览器扩展获取题目信息，并自动创建项目目录，生成代码模板，并保存时间和空间限制。`run_tests.py` 用于编译和运行这些项目中的测试用例，同时尊重每个题目的时间限制和内存限制。
 
 ## 更新日志
 
-最新版本：v0.2 - 2024年8月20日
+最新版本：v0.2.1 - 2024年8月20日
 
 [查看更新日志](https://blog.yangtb2024.me/archives/27)
 
 ## 文件结构
 
-- `cp-setup.py`：从 Competitive Companion 获取题目并创建项目目录，保存相关信息。
-- `run_tests.py`：编译项目代码并运行测试用例，根据 `limits.txt` 中的限制条件执行测试。
+- `cp-setup.py`：从 Competitive Companion 获取题目并创建项目目录，保存相关信息，并生成 `main.cpp` 和测试用例文件。
+- `run_tests.py`：编译项目代码并运行测试用例，根据 `limits.txt` 中的限制条件执行测试，并支持代码变更检测以提高效率。
 - `latest_problem.txt`：保存最近获取的题目名称，用于快速定位项目目录。
 - `limits.txt`：每个项目目录下保存的时间和空间限制文件。
 
@@ -73,7 +71,7 @@
 
 - 选择 `Tools` > `External Tools` > `Run Tests`，它会自动使用 `latest_problem.txt` 中保存的最新题目名称来定位项目目录，并编译代码和运行测试用例。
 
-运行后，你会看到 CLion 的控制台输出每个测试用例的结果。如果设置了时间限制，程序会根据这个限制控制每个测试用例的运行时间。
+运行后，你会看到 CLion 的控制台输出每个测试用例的结果。如果设置了时间和内存限制，程序会根据这些限制控制每个测试用例的运行时间和内存使用情况。
 
 ## 示例
 
@@ -92,8 +90,8 @@ Sample_Problem/
 `limits.txt` 可能包含以下内容：
 
 ```
-TimeLimit: 2000
-MemoryLimit: 256
+TimeLimit: 2000 ms
+MemoryLimit: 256 MB
 ```
 
 使用 `Run Tests` 工具将编译 `main.cpp` 并依次运行 `inputX.txt` 文件中定义的测试用例，结果会显示在 CLion 的控制台中，并在 `run_tests.log` 中记录详细信息。
